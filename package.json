@@ -1,7 +1,7 @@
 {
   "name": "hubot-kvv",
-  "description": "A hubot script that access http://live.kvv.de/",
-  "version": "0.0.0",
+  "description": "A hubot script that accesses http://live.kvv.de/",
+  "version": "0.1.0",
   "author": "René Filip <renefilip@mail.com>",
   "license": "MIT",
 

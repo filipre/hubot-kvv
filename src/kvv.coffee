@@ -1,22 +1,49 @@
 # Description
-#   A hubot script that access http://live.kvv.de/
+#   A hubot script that accesses http://live.kvv.de/
 #
 # Configuration:
-#   LIST_OF_ENV_VARS_TO_SET
+#   HUBOT_KVV_API_BASE
+#   HUBOT_KVV_API_KEY
 #
 # Commands:
-#   hubot hello - <what the respond trigger does>
-#   orly - <what the hear trigger does>
-#
-# Notes:
-#   <optional notes required for the script>
+#   hubot kvv - Get depature times at Duale Hochschule
 #
 # Author:
 #   René Filip <renefilip@mail.com>
 
-module.exports = (robot) ->
-  robot.respond /hello/, (res) ->
-    res.reply "hello!"
+HUBOT_KVV_API_BASE = if process.env.HUBOT_KVV_API_BASE then process.env.HUBOT_KVV_API_BASE else 'http://live.kvv.de/webapp/'
+HUBOT_KVV_API_KEY = if process.env.HUBOT_KVV_API_KEY then process.env.HUBOT_KVV_API_KEY else '377d840e54b59adbe53608ba1aad70e8'
 
-  robot.hear /orly/, ->
-    res.send "yarly"
+module.exports = (robot) ->
+
+  robot.on "kvv", (kvv) ->
+
+    # de:8212:12 is "Karlsruhe Duale Hochschule"
+    requestUrl = HUBOT_KVV_API_BASE + 'departures/bystop/de:8212:12?key=' + HUBOT_KVV_API_KEY + '&maxInfos=4'
+    robot.http(requestUrl).get() (err, res, body) ->
+
+      if res.statusCode isnt 200
+        res.send "Request didn't come back HTTP 200 :("
+        return
+
+      data = null
+      try
+        data = JSON.parse body
+      catch error
+        res.send "Ran into an error parsing JSON :("
+        return
+
+      # only "Gleis 1"
+      departures = (depature for depature in data.departures when depature.stopPosition == '1')
+
+      # build reply
+      reply = "Abfahrt ab Duale Hochschule an Gleis 1:"
+      for departure in departures
+        reply += "\n(#{departure.route}) Richtung #{departure.destination}: #{departure.time}"
+      robot.messageRoom kvv.room, reply
+
+
+  robot.respond /kvv/, (res) ->
+    robot.emit "kvv", {
+      room: res.message.room
+    }
