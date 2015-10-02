@@ -42,8 +42,7 @@ module.exports = (robot) ->
         reply += "\n(#{departure.route}) Richtung #{departure.destination}: #{departure.time}"
       robot.messageRoom kvv.room, reply
 
-
-  robot.respond /kvv/, (res) ->
+  robot.respond /kvv/i, (res) ->
     robot.emit "kvv", {
       room: res.message.room
     }
